@@ -1,29 +1,33 @@
-# Base image PHP + Composer
-FROM php:8.2-cli
-
-# Install dependencies Laravel
-RUN apt-get update && apt-get install -y \
-    unzip \
-    git \
-    libzip-dev \
-    && docker-php-ext-install pdo_mysql zip
+# Stage 1: Build dependencies dengan Composer
+FROM composer:2 AS build
 
 # Set working directory
 WORKDIR /app
 
-# Copy project
+# Copy semua file project
 COPY . .
 
-# Install Composer
-RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
-    && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
-    && php -r "unlink('composer-setup.php');"
+# Install dependencies Laravel (tanpa dev, dengan optimized autoloader)
+RUN cd PROYEK_COBA1/backend-servis && composer install --no-dev --optimize-autoloader
 
-# Install PHP dependencies Laravel
-RUN composer install --no-dev --optimize-autoloader
+# Stage 2: Production image PHP
+FROM php:8.2-fpm
+
+# Install PHP extensions yang dibutuhkan Laravel
+RUN apt-get update && apt-get install -y \
+    libzip-dev \
+    unzip \
+    git \
+    && docker-php-ext-install pdo_mysql zip
+
+# Copy hasil build dari stage 1
+COPY --from=build /app /app
+
+# Set working directory ke folder backend
+WORKDIR /app/PROYEK_COBA1/backend-servis
 
 # Expose port 8080
 EXPOSE 8080
 
-# Jalankan start.sh saat container dijalankan
-CMD ["./start.sh"]
+# Jalankan server PHP built-in (development/demo)
+CMD ["php", "-S", "0.0.0.0:8080", "-t", "public"]
