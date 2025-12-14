@@ -1,0 +1,7 @@
+{
+  "build": {
+    "builder": "nixpacks",
+    "buildCommand": "cd PROYEK_COBA1/backend-servis && composer install --no-dev --optimize-autoloader",
+    "startCommand": "cd PROYEK_COBA1/backend-servis && php artisan serve --host 0.0.0.0 --port $PORT"
+  }
+}
